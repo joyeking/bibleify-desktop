@@ -1,4 +1,10 @@
 {
-  "presets": ["react"],
-  "plugins": ["transform-object-rest-spread", "transform-decorators-legacy"]
+  "presets": [
+    ["@babel/preset-env", { "targets": { "electron": "28" } }],
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    "@babel/plugin-proposal-object-rest-spread"
+  ]
 }

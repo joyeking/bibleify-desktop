@@ -1,8 +1,4 @@
-const Realm = require('../../lib/realm.node').Realm;
-require('../../lib/extensions')(Realm);
-
-import { remote } from 'electron';
-import PassageSchema from '../constants/PassageSchema';
+import { openBibleRealm } from '../utils/realmClient';
 
 export const search = {
   state: {
@@ -22,24 +18,28 @@ export const search = {
     },
   },
   effects: {
-    fetchSearch(payload, rootState) {
+    async fetchSearch(payload, rootState) {
       const { text } = rootState.search;
       const { activeVersion } = rootState.bible;
-      Realm.open({
-        schema: [PassageSchema],
-        readOnly: true,
-        inMemory: false,
-        path: `${remote.app.getAppPath()}/${activeVersion.value}.realm`,
-      }).then(realm => {
-        let passages = realm.objects('Passage');
-        let query = `content CONTAINS[c] "${text}" AND type != "t"`;
-        let filteredPassages = passages.filtered(query).slice(0, 50);
 
-        const resultsRaw = Object.keys(filteredPassages);
-        const results = resultsRaw.map(key => filteredPassages[key]);
+      if (!text.trim()) {
+        this.setResults([]);
         this.setShow(true);
-        this.setResults(results);
-      });
+        return;
+      }
+
+      try {
+        const realm = await openBibleRealm(activeVersion.value);
+        // Escape user text for Realm query safety.
+        const escapedText = text.replace(/"/g, '\\"');
+        const query = `content CONTAINS[c] "${escapedText}" AND type != "t"`;
+        const filteredPassages = realm.objects('Passage').filtered(query).slice(0, 50);
+        this.setShow(true);
+        this.setResults(filteredPassages.map(item => item));
+      } catch (error) {
+        this.setShow(true);
+        this.setResults([]);
+      }
     },
   },
 };

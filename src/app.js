@@ -7,14 +7,22 @@ import Content from './components/content';
 import Player from './components/player';
 import Search from './components/search';
 
-@connect(state => ({ bible: state.bible }), dispatch => ({ dispatch }))
+@connect(state => ({ bible: state.bible, ui: state.ui }), dispatch => ({ dispatch }))
 export default class App extends PureComponent {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     this.props.dispatch.bible.fetchVerses(this.props.bible);
+    this.props.dispatch.annotations.init();
+
+    // Keep theme in sync with OS preference while in auto mode.
+    if (window.matchMedia) {
+      this.themeListener = window.matchMedia('(prefers-color-scheme: dark)');
+      this.onThemeChange = () => this.props.dispatch.ui.refreshAutoTheme();
+      if (this.themeListener.addEventListener) {
+        this.themeListener.addEventListener('change', this.onThemeChange);
+      } else {
+        this.themeListener.addListener(this.onThemeChange);
+      }
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -28,10 +36,23 @@ export default class App extends PureComponent {
     }
   }
 
+  componentWillUnmount() {
+    if (this.themeListener) {
+      if (this.themeListener.removeEventListener) {
+        this.themeListener.removeEventListener('change', this.onThemeChange);
+      } else {
+        this.themeListener.removeListener(this.onThemeChange);
+      }
+    }
+  }
+
   render() {
     const mergeStyle = Object.assign;
     return (
-      <div style={mergeStyle({}, styles.flex, styles.column, styles.fullHeight)} className='root-wrapper'>
+      <div
+        style={mergeStyle({}, styles.flex, styles.column, styles.fullHeight)}
+        className={`root-wrapper theme-${this.props.ui.theme}`}
+      >
         <div style={mergeStyle({}, styles.flex, styles.row)}>
           <Sidebar />
           <div style={mergeStyle({}, styles.flex, styles.hidden)} className='content'>
@@ -51,9 +72,6 @@ export default class App extends PureComponent {
 const styles = {
   fullHeight: {
     height: '100vh',
-  },
-  overHidden: {
-    overflow: 'hidden',
   },
   flex: {
     flex: 1,

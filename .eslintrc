@@ -1,9 +1,16 @@
 {
   "extends": ["eslint:recommended", "plugin:react/recommended"],
-  "parser": "babel-eslint",
-  "plugins": [
-    "react"
-  ],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false,
+    "babelOptions": {
+      "presets": ["@babel/preset-react"]
+    },
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": ["react"],
   "globals": {
     "clearInterval": true,
     "clearTimeout": true,
@@ -19,6 +26,7 @@
     "alert": true,
     "document": true,
     "prompt": true,
+    "window": true
   },
   "rules": {
     "comma-dangle": [1, {
@@ -26,7 +34,7 @@
       "objects": "always-multiline",
       "imports": "always-multiline",
       "exports": "always-multiline",
-      "functions": "ignore",
+      "functions": "ignore"
     }],
     "curly": [1, "all"],
     "indent": [1, 2],
@@ -36,6 +44,6 @@
     "no-unused-vars": 1,
     "quotes": [1, "single", { "avoidEscape": true }],
     "semi": [1, "always"],
-    "react/prop-types": 0,
+    "react/prop-types": 0
   }
 }

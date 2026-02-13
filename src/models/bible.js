@@ -1,9 +1,6 @@
 import Books from '../constants/Books';
 import Versions from '../constants/Versions';
-import { remote } from 'electron';
-import PassageSchema from '../constants/PassageSchema';
-const Realm = require('../../lib/realm.node').Realm;
-require('../../lib/extensions')(Realm);
+import { openBibleRealm } from '../utils/realmClient';
 
 export const bible = {
   state: {
@@ -13,6 +10,9 @@ export const bible = {
     activeVerse: null,
     jumpText: '',
     verses: [],
+    loading: false,
+    error: null,
+    offlineReady: true,
   },
   reducers: {
     setActiveChapter(state, payload) {
@@ -29,10 +29,16 @@ export const bible = {
       return { ...state, activeVersion: payload };
     },
     setVerses(state, payload) {
-      return { ...state, verses: payload };
+      return { ...state, verses: payload, loading: false, error: null };
     },
     setJumpText(state, payload) {
       return { ...state, jumpText: payload };
+    },
+    setLoading(state, payload) {
+      return { ...state, loading: payload };
+    },
+    setError(state, payload) {
+      return { ...state, error: payload, loading: false };
     },
     prevChapter(state) {
       let newChapter = state.activeChapter - 1;
@@ -43,9 +49,7 @@ export const bible = {
     },
     nextChapter(state) {
       let newChapter = state.activeChapter + 1;
-      const currentBook = Books.find(book => {
-        return book.value == state.activeBook.value;
-      });
+      const currentBook = Books.find(book => book.value == state.activeBook.value);
       if (newChapter > currentBook.total) {
         newChapter = currentBook.total;
       }
@@ -53,24 +57,27 @@ export const bible = {
     },
   },
   effects: {
-    fetchVerses(payload) {
+    async fetchVerses(payload) {
       const { activeVersion, activeBook, activeChapter } = payload;
-      Realm.open({
-        schema: [PassageSchema],
-        readOnly: true,
-        inMemory: false,
-        path: `${remote.app.getAppPath()}/${activeVersion.value}.realm`,
-      }).then(realm => {
-        let passages = realm.objects('Passage');
-        let filteredPassages = passages
-          .filtered(`book = "${activeBook.value}" AND chapter = "${activeChapter}"`)
+      this.setLoading(true);
+
+      try {
+        const realm = await openBibleRealm(activeVersion.value);
+        const filteredPassages = realm
+          .objects('Passage')
+          .filtered(`book = "${activeBook.value}" AND chapter = ${activeChapter}`)
           .sorted('order');
-        const versesRaw = Object.keys(filteredPassages);
-        if (versesRaw.length) {
-          const verses = versesRaw.map(key => filteredPassages[key]);
+
+        const verses = filteredPassages.map(item => item);
+        if (verses.length) {
           this.setVerses(verses);
+        } else {
+          this.setError('No passages were found for this chapter.');
         }
-      });
+      } catch (error) {
+        // Surface a user-friendly offline DB error instead of crashing.
+        this.setError(`Unable to open ${activeVersion.value}.realm. Ensure the offline database exists.`);
+      }
     },
   },
 };
