@@ -34,6 +34,12 @@ const Versions = [
     value: 'sunda',
     lang: 'id',
   },
+  {
+    // Placeholder: add amharic.realm to root folder to enable this translation.
+    name: 'Amharic Bible (AMH)',
+    value: 'amharic',
+    lang: 'am',
+  },
 ];
 
 export default Versions;

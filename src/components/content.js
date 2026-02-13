@@ -1,25 +1,41 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import keydown from 'react-keydown';
+import { getAnnotationKey } from '../models/annotations';
+
+const colors = ['#fff59d', '#a5d6a7', '#90caf9', '#f48fb1'];
 
 @keydown
-@connect(state => ({ bible: state.bible }), dispatch => ({ dispatch }))
+@connect(state => ({ bible: state.bible, annotations: state.annotations, ui: state.ui }), dispatch => ({ dispatch }))
 export default class Content extends PureComponent {
   constructor(props) {
     super(props);
     this.verseRefs = {};
   }
+
   scrollToTop() {
     this._scroll.scrollTop = 0;
   }
+
   onPrevChapter() {
     this.props.dispatch.bible.prevChapter();
     this.scrollToTop();
   }
+
   onNextChapter() {
     this.props.dispatch.bible.nextChapter();
     this.scrollToTop();
   }
+
+  onAddNote(verse) {
+    const verseKey = getAnnotationKey(this.props.bible, verse.verse);
+    const current = this.props.annotations.notes[verseKey] || '';
+    const nextNote = window.prompt(`Add note for verse ${verse.verse}`, current);
+    if (nextNote !== null) {
+      this.props.dispatch.annotations.setVerseNote({ verse: verse.verse, note: nextNote.trim() });
+    }
+  }
+
   componentWillReceiveProps(nextProps) {
     if (this.props.bible.activeVerse != nextProps.bible.activeVerse) {
       if (nextProps.bible.activeVerse == 0) {
@@ -37,8 +53,9 @@ export default class Content extends PureComponent {
       }
     }
   }
+
   render() {
-    const { verses } = this.props.bible;
+    const { verses, loading, error } = this.props.bible;
     return (
       <div className='verse-container' style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <div
@@ -47,6 +64,8 @@ export default class Content extends PureComponent {
           style={{ flex: 1, display: 'flex', overflow: 'auto' }}
         >
           <div className='container'>
+            {loading ? <div className='status-banner'>Loading chapter...</div> : null}
+            {error ? <div className='status-banner status-banner-error'>{error}</div> : null}
             {verses.map((verse, i) => {
               const isTitle = verse.type == 't';
               if (isTitle) {
@@ -55,14 +74,41 @@ export default class Content extends PureComponent {
                     {verse.content}{' '}
                   </h1>
                 );
-              } else {
-                return (
-                  <div key={i} ref={verseRef => (this.verseRefs[verse.verse] = verseRef)} className='verse'>
-                    {verse.verse != 0 ? <span className='verse-number'>{verse.verse}</span> : null}
-                    {verse.content}
-                  </div>
-                );
               }
+
+              const verseKey = getAnnotationKey(this.props.bible, verse.verse);
+              const note = this.props.annotations.notes[verseKey];
+              const highlight = this.props.annotations.highlights[verseKey];
+
+              return (
+                <div
+                  key={i}
+                  ref={verseRef => (this.verseRefs[verse.verse] = verseRef)}
+                  className='verse'
+                  style={{ background: highlight || 'transparent', fontSize: this.props.ui.fontSize }}
+                >
+                  {verse.verse != 0 ? <span className='verse-number'>{verse.verse}</span> : null}
+                  {verse.content}
+                  <div className='verse-actions'>
+                    {colors.map(color => (
+                      <button
+                        key={`${verse.verse}-${color}`}
+                        className='highlight-dot'
+                        style={{ background: color }}
+                        onClick={() => this.props.dispatch.annotations.setVerseHighlight({ verse: verse.verse, color })}
+                      />
+                    ))}
+                    <button
+                      className='btn btn-sm btn-outline-secondary note-btn'
+                      onClick={() => this.onAddNote(verse)}
+                      title='Add/Edit note'
+                    >
+                      📝
+                    </button>
+                  </div>
+                  {note ? <div className='verse-note'>{note}</div> : null}
+                </div>
+              );
             })}
           </div>
         </div>

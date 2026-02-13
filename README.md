@@ -11,12 +11,6 @@ Simple bible app with dramatized audio built with [Electron](https://electronjs.
 
 Bibleify is a simple & fast bible app with dramatized audio. The design is modern, distraction-free, and easy-to-use.
 
-The application is free and Open Source, its original purpose was for me to listen to the Words of God. This app provides well-designed bible text and high quality audio that can help me to understand bible better.
-
-To support this project you can give star 🌟 to this github repo below or give donation 😊The donation will be used to implement new features like integration with the mobile app, bible reading plan, etc.
-
-Bibleify is made in Singapore with lots of ❤️​by Sonny Lazuardi​​ & the amazing community.​
-
 ## Features
 
 - Easy & quick navigation
@@ -31,24 +25,32 @@ Bibleify is made in Singapore with lots of ❤️​by Sonny Lazuardi​​ & th
   - Terjemahan Baru (TB)
   - Bahasa Jawa (JAWA)
   - Bahasa Sunda (SUNDA)
-
-## Roadmap
-
-- Integration with Bibleify Mobile (https://github.com/sonnylazuardi/bibleify-mobile)
-- Bookmark
-- History
-- Bible Reading Plan
+  - Amharic Bible (AMH) placeholder (add `amharic.realm` file)
+- New offline-first reader improvements
+  - Verse highlights (multi-color)
+  - Verse notes
+  - Theme mode (light, dark, auto)
+  - Font-size slider
+  - Faster toolbar navigation for books + chapters
+  - Loading and error states for offline realm data
 
 ## Prerequisites
 
-* Git
-* Node.js
+- Git
+- Node.js 18-20
 
 ## Setup Development
 
 1. Clone the repository.
-2. Open Git Bash and enter `npm install`.
+2. Install dependencies: `npm install`
+3. Start development mode: `npm run dev`
 
 ## Running the Application
 
-In Git Bash, enter `npm run dev`.
+- Development with hot reload: `npm run dev`
+- Start Electron only: `npm run dev:electron`
+- Build renderer bundle: `npm run build`
+
+## Troubleshooting
+
+If `webpack-dev-server` is not recognized, ensure dependencies are installed and run the script via npm (`npm run dev`) instead of calling binaries directly. The dev script now invokes the local binary path in `node_modules`.

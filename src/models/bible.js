@@ -13,6 +13,9 @@ export const bible = {
     activeVerse: null,
     jumpText: '',
     verses: [],
+    loading: false,
+    error: null,
+    offlineReady: true,
   },
   reducers: {
     setActiveChapter(state, payload) {
@@ -29,10 +32,16 @@ export const bible = {
       return { ...state, activeVersion: payload };
     },
     setVerses(state, payload) {
-      return { ...state, verses: payload };
+      return { ...state, verses: payload, loading: false, error: null };
     },
     setJumpText(state, payload) {
       return { ...state, jumpText: payload };
+    },
+    setLoading(state, payload) {
+      return { ...state, loading: payload };
+    },
+    setError(state, payload) {
+      return { ...state, error: payload, loading: false };
     },
     prevChapter(state) {
       let newChapter = state.activeChapter - 1;
@@ -55,22 +64,29 @@ export const bible = {
   effects: {
     fetchVerses(payload) {
       const { activeVersion, activeBook, activeChapter } = payload;
+      this.setLoading(true);
       Realm.open({
         schema: [PassageSchema],
         readOnly: true,
         inMemory: false,
         path: `${remote.app.getAppPath()}/${activeVersion.value}.realm`,
-      }).then(realm => {
-        let passages = realm.objects('Passage');
-        let filteredPassages = passages
-          .filtered(`book = "${activeBook.value}" AND chapter = "${activeChapter}"`)
-          .sorted('order');
-        const versesRaw = Object.keys(filteredPassages);
-        if (versesRaw.length) {
-          const verses = versesRaw.map(key => filteredPassages[key]);
-          this.setVerses(verses);
-        }
-      });
+      })
+        .then(realm => {
+          let passages = realm.objects('Passage');
+          let filteredPassages = passages
+            .filtered(`book = "${activeBook.value}" AND chapter = "${activeChapter}"`)
+            .sorted('order');
+          const versesRaw = Object.keys(filteredPassages);
+          if (versesRaw.length) {
+            const verses = versesRaw.map(key => filteredPassages[key]);
+            this.setVerses(verses);
+          } else {
+            this.setError('No passages were found for this chapter.');
+          }
+        })
+        .catch(() => {
+          this.setError(`Unable to open ${activeVersion.value}.realm. Ensure the offline database exists.`);
+        });
     },
   },
 };

@@ -444,3 +444,96 @@ button:focus,
   background: rgba(255, 255, 255, 0.5);
   border-radius: 100px;
 }
+
+.toolbar-controls {
+  position: absolute;
+  right: 220px;
+  top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .control-select {
+    width: 85px;
+    height: 33px;
+    font-size: 12px;
+  }
+
+  .font-slider {
+    width: 100px;
+  }
+}
+
+.verse {
+  margin-bottom: 8px;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.verse-actions {
+  display: inline-flex;
+  margin-left: 10px;
+  gap: 6px;
+  align-items: center;
+}
+
+.highlight-dot {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.note-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.verse-note {
+  margin-left: 16px;
+  margin-top: 4px;
+  opacity: 0.85;
+  font-style: italic;
+}
+
+.status-banner {
+  margin-top: 16px;
+  padding: 10px;
+  border-radius: 6px;
+  background: #e7f1ff;
+}
+
+.status-banner-error {
+  background: #ffe7e7;
+}
+
+.theme-dark {
+  background: #151515;
+  color: #ddd;
+
+  .navbar,
+  .search-header,
+  .search-item,
+  .verse-container {
+    background: #1f1f1f;
+    color: #ddd;
+  }
+
+  .verse-number {
+    color: #bbb !important;
+  }
+
+  .search {
+    background: #181818;
+  }
+
+  .dropdown-menu {
+    background: #2b2b2b;
+  }
+
+  .dropdown-item {
+    color: #eee;
+  }
+}
