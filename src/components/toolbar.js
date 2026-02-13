@@ -2,8 +2,12 @@ import React, { PureComponent } from 'react';
 import { UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 import { connect } from 'react-redux';
 import Versions from '../constants/Versions';
+import Books from '../constants/Books';
 
-@connect(state => ({ bible: state.bible, search: state.search, player: state.player }), dispatch => ({ dispatch }))
+@connect(
+  state => ({ bible: state.bible, search: state.search, player: state.player, ui: state.ui }),
+  dispatch => ({ dispatch }),
+)
 export default class Toolbar extends PureComponent {
   constructor(props) {
     super(props);
@@ -11,36 +15,46 @@ export default class Toolbar extends PureComponent {
       isSearchFocused: false,
     };
   }
+
   onSelectChapter(chapter) {
     this.props.dispatch.bible.setActiveChapter(chapter);
   }
+
+  onSelectBook(book) {
+    this.props.dispatch.bible.setActiveBook(book);
+    this.props.dispatch.bible.setActiveChapter(1);
+  }
+
   onSelectVersion(version) {
     this.props.dispatch.bible.setActiveVersion(version);
   }
+
   onSearchFocus() {
-    this.setState({
-      isSearchFocused: true,
-    });
+    this.setState({ isSearchFocused: true });
   }
+
   onSearchBlur() {
-    this.setState({
-      isSearchFocused: false,
-    });
+    this.setState({ isSearchFocused: false });
   }
+
   onSearch() {
     this.props.dispatch.search.fetchSearch();
   }
+
   onPlayChapter() {
     this.props.dispatch.player.playCurrentChapter();
   }
+
   render() {
     const { activeBook, activeChapter, activeVersion } = this.props.bible;
     const { text } = this.props.search;
     const { isSearchFocused } = this.state;
+    const { fontSize, themeMode } = this.props.ui;
     let chapters = [];
     for (var i = 1; i <= activeBook.total; i++) {
       chapters.push(i);
     }
+
     return (
       <nav className='navbar navbar-expand-md navbar-inverse fixed-top bg-inverse'>
         <div className='version-box'>
@@ -64,8 +78,21 @@ export default class Toolbar extends PureComponent {
             </DropdownMenu>
           </UncontrolledDropdown>
         </div>
+
         <div className='title-box'>
-          <div className='title'>{activeVersion.lang == 'en' ? activeBook.name : activeBook.name_id}</div>
+          <UncontrolledDropdown>
+            <DropdownToggle caret className='btn-outline-secondary btn-version'>
+              {activeVersion.lang == 'en' ? activeBook.name : activeBook.name_id}
+            </DropdownToggle>
+            <DropdownMenu>
+              {Books.map(book => (
+                <DropdownItem key={book.value} onClick={() => this.onSelectBook(book)}>
+                  {activeVersion.lang == 'en' ? book.name : book.name_id}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          </UncontrolledDropdown>
+
           <UncontrolledDropdown>
             <DropdownToggle caret className='btn-outline-secondary btn-version'>
               {activeChapter}
@@ -88,6 +115,27 @@ export default class Toolbar extends PureComponent {
             <i className='ion ion-ios-headset' />
           </button>
         </div>
+
+        <div className='toolbar-controls'>
+          <select
+            className='form-control control-select'
+            value={themeMode}
+            onChange={e => this.props.dispatch.ui.setThemeMode(e.target.value)}
+          >
+            <option value='auto'>Auto</option>
+            <option value='light'>Light</option>
+            <option value='dark'>Dark</option>
+          </select>
+          <input
+            type='range'
+            min='14'
+            max='30'
+            value={fontSize}
+            className='font-slider'
+            onChange={e => this.props.dispatch.ui.setFontSize(parseInt(e.target.value, 10))}
+          />
+        </div>
+
         <div className={`input-group mb-3 search-box ${isSearchFocused ? 'search-focused' : ''}`}>
           <input
             type='text'
